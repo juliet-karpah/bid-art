@@ -4,6 +4,7 @@ from app.db.base import get_session
 from sqlalchemy import text
 from contextlib import asynccontextmanager
 from app.core.queue import get_pool
+from app.routes import auth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,6 +13,7 @@ async def lifespan(app: FastAPI):
     await app.state.arq_pool.aclose()
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(auth.router)
 
 @app.get("/")
 async def root():
