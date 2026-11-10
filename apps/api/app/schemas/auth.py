@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 import uuid
 
 class LoginModel(BaseModel):
@@ -10,6 +10,7 @@ class RegisterModel(LoginModel):
     password: str = Field(min_length=8, max_length=128)
 
 class CurrentUserModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     name: str
     email: EmailStr

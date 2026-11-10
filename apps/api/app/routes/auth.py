@@ -4,11 +4,11 @@ from app.schemas.auth import RegisterModel, LoginModel, CurrentUserModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.user import User
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password, verify_password, create_access_token
+from app.core.dependencies import get_authenticated_user
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -35,8 +35,9 @@ async def login(data: LoginModel, db: AsyncSession = Depends(get_session)):
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
-    return {"message": "Login successful"}
+    access_token = create_access_token(str(user.id))
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=CurrentUserModel)
-async def get_current_user():
-    pass
+async def get_current_user(user: User = Depends(get_authenticated_user)):
+    return user
