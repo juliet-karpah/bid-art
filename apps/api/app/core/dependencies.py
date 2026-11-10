@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.core.security import decode_access_token
 from jwt.exceptions import InvalidTokenError
 import uuid
+from collections.abc import Callable
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -38,3 +39,13 @@ async def get_authenticated_user(credentials: HTTPAuthorizationCredentials = Dep
             headers={"WWW-Authenticate": "Bearer"}
         )
     return user
+
+def require_role(role: str) -> Callable:
+    async def get_role(current_user: User = Depends(get_authenticated_user)):
+        if current_user.role != role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission"
+            )
+        return current_user
+    return get_role
