@@ -3,9 +3,9 @@ services:
     image: pgvector/pgvector:pg17
     container_name: bidart-postgres
     environment:
-      POSTGRES_DB: bidart_db
-      POSTGRES_USER: bidart_app
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -15,6 +15,48 @@ services:
     container_name: bidart-redis
     ports:
       - "6379:6379"
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: bidart-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+    depends_on:
+      - postgres
+      - redis
+  frontend:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: bidart-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    volumes:
+    - ./apps/web:/app
+    - /app/node_modules
+    - /app/.next
+  worker:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: bidart-worker
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+    command: ["arq", "app.worker.WorkerSettings"]
+    depends_on:
+      - postgres
+      - redis
 
 volumes:
   pg_data: 

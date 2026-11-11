@@ -7,4 +7,4 @@ async def first_job(ctx, message: str):
 
 class WorkerSettings:
     functions = [first_job]
-    redis_config = REDIS_SETTINGS
+    redis_settings = REDIS_SETTINGS
